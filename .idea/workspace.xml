@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="915a797c-3184-4e81-b7ee-4413dcf6d37f" name="Changes" comment="add jest tyoes" />
+    <list default="true" id="915a797c-3184-4e81-b7ee-4413dcf6d37f" name="Changes" comment="adding build scripts for ios and android" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,6 +55,7 @@
       <updated>1755095119679</updated>
       <workItem from="1755095120904" duration="3348000" />
       <workItem from="1755109074629" duration="2490000" />
+      <workItem from="1755193254907" duration="745000" />
     </task>
     <task id="LOCAL-00001" summary="initial project setup">
       <option name="closed" value="true" />
@@ -72,7 +73,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755113399444</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="adding build scripts for ios and android">
+      <option name="closed" value="true" />
+      <created>1755193398348</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1755193398348</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -82,6 +91,7 @@
     <MESSAGE value="Initial commit" />
     <MESSAGE value="initial project setup" />
     <MESSAGE value="add jest tyoes" />
-    <option name="LAST_COMMIT_MESSAGE" value="add jest tyoes" />
+    <MESSAGE value="adding build scripts for ios and android" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding build scripts for ios and android" />
   </component>
 </project>

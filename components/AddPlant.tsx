@@ -22,9 +22,10 @@ interface AddPlantProps {
   onSave: (plantData: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>) => void;
   sites: Site[];
   editingPlant?: Plant | null;
+  embedded?: boolean;
 }
 
-const AddPlant: React.FC<AddPlantProps> = ({ visible, onClose, onSave, sites, editingPlant = null }) => {
+const AddPlant: React.FC<AddPlantProps> = ({ visible, onClose, onSave, sites, editingPlant = null, embedded = false }) => {
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('');
   const [plantedDate, setPlantedDate] = useState<Date | null>(null);
@@ -219,22 +220,17 @@ const AddPlant: React.FC<AddPlantProps> = ({ visible, onClose, onSave, sites, ed
 
   const selectedSite = sites.find(site => site.id === selectedSiteId);
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleCancel}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {editingPlant ? 'Edit Plant' : 'Add a new Plant'}
-            </Text>
-          </View>
+  const renderContent = () => (
+    <>
+      {!embedded && (
+        <View style={styles.header}>
+          <Text style={styles.title}>
+            {editingPlant ? 'Edit Plant' : 'Add a new Plant'}
+          </Text>
+        </View>
+      )}
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={embedded ? styles.embeddedContent : styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.nameImageRow}>
               <View style={styles.nameContainer}>
                 <Text style={styles.label}>
@@ -404,32 +400,117 @@ const AddPlant: React.FC<AddPlantProps> = ({ visible, onClose, onSave, sites, ed
                   <Text style={styles.clearDateText}>Clear</Text>
                 </TouchableOpacity>
               )}
-            </View>
-          </ScrollView>
+        </View>
+      </ScrollView>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+      {!embedded && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              !isFormValid() && styles.saveButtonDisabled,
+            ]}
+            onPress={handleSave}
+            disabled={!isFormValid()}
+          >
+            <Text
               style={[
-                styles.saveButton,
-                !isFormValid() && styles.saveButtonDisabled,
+                styles.saveButtonText,
+                !isFormValid() && styles.saveButtonTextDisabled,
               ]}
-              onPress={handleSave}
-              disabled={!isFormValid()}
             >
-              <Text
-                style={[
-                  styles.saveButtonText,
-                  !isFormValid() && styles.saveButtonTextDisabled,
-                ]}
-              >
-                Save
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Save
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {embedded && (
+        <View style={styles.embeddedButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.embeddedSaveButton,
+              !isFormValid() && styles.saveButtonDisabled,
+            ]}
+            onPress={handleSave}
+            disabled={!isFormValid()}
+          >
+            <Text
+              style={[
+                styles.saveButtonText,
+                !isFormValid() && styles.saveButtonTextDisabled,
+              ]}
+            >
+              Save Changes
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <View style={styles.embeddedContainer}>
+        {renderContent()}
+        
+        {showDatePicker.visible && showDatePicker.field && (
+          <>
+            {Platform.OS === 'ios' && (
+              <Modal transparent animationType="slide">
+                <View style={styles.datePickerOverlay}>
+                  <View style={styles.datePickerContainer}>
+                    <View style={styles.datePickerHeader}>
+                      <TouchableOpacity onPress={handleDatePickerDone}>
+                        <Text style={styles.datePickerDoneText}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={
+                        showDatePicker.field === 'plantedDate' ? plantedDate || new Date() :
+                        showDatePicker.field === 'lastWatered' ? lastWatered || new Date() :
+                        lastFertilized || new Date()
+                      }
+                      mode="date"
+                      display="spinner"
+                      onChange={handleDateChange}
+                    />
+                  </View>
+                </View>
+              </Modal>
+            )}
+            {Platform.OS === 'android' && (
+              <DateTimePicker
+                value={
+                  showDatePicker.field === 'plantedDate' ? plantedDate || new Date() :
+                  showDatePicker.field === 'lastWatered' ? lastWatered || new Date() :
+                  lastFertilized || new Date()
+                }
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+          </>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={handleCancel}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.modalContainer}>
+          {renderContent()}
         </View>
       </View>
 
@@ -719,6 +800,25 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  embeddedContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  embeddedContent: {
+    flex: 1,
+    padding: 20,
+  },
+  embeddedButtonContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  embeddedSaveButton: {
+    paddingVertical: 15,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
   },
 });
 

@@ -15,10 +15,9 @@ interface NeedCareProps {
   sites: Site[];
   onNavigateToSites: () => void;
   onNavigateToPlants: () => void;
-  onPlantUpdate?: (plantData: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
-const NeedCare: React.FC<NeedCareProps> = ({ sites, onNavigateToSites, onNavigateToPlants, onPlantUpdate }) => {
+const NeedCare: React.FC<NeedCareProps> = ({ sites, onNavigateToSites, onNavigateToPlants }) => {
   const plantsNeedingCare = getPlantsNeedingCare(sites);
 
   if (plantsNeedingCare.length === 0) {
@@ -56,13 +55,9 @@ const NeedCare: React.FC<NeedCareProps> = ({ sites, onNavigateToSites, onNavigat
           <PlantCard
             key={plant.id}
             plant={plant}
-            careInfo={{
-              needsWater: plant.needsWater,
-              needsFertilizer: plant.needsFertilizer
-            }}
-            showEditIcon={true}
-            sites={sites}
-            onPlantUpdate={onPlantUpdate}
+            showSpecies={false}
+            showCareSchedule={true}
+            showCareInfo={true}
           />
         ))}
       </View>

@@ -188,18 +188,17 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
       case 'sites':
         return <Sites sites={sites} onSitePress={handleSitePress} />;
       case 'plants':
-        return <Plants sites={sites} onPlantUpdate={handleSaveNewPlant} />;
+        return <Plants sites={sites} />;
       case 'need-care':
         return (
           <NeedCare 
             sites={sites} 
             onNavigateToSites={() => setActiveTab('sites')}
             onNavigateToPlants={() => setActiveTab('plants')}
-            onPlantUpdate={handleSaveNewPlant}
           />
         );
       default:
-        return <NeedCare sites={sites} onNavigateToSites={() => setActiveTab('sites')} onNavigateToPlants={() => setActiveTab('plants')} onPlantUpdate={handleSaveNewPlant} />;
+        return <NeedCare sites={sites} onNavigateToSites={() => setActiveTab('sites')} onNavigateToPlants={() => setActiveTab('plants')} />;
     }
   };
 

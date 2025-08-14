@@ -1,91 +1,147 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { Plant, Site } from '../types';
-import AddPlant from './AddPlant';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Plant } from '../types';
+import { getDaysDifference } from '../utils/plantCareUtils';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-interface PlantCareInfo {
-  needsWater?: boolean;
-  needsFertilizer?: boolean;
-  statusText?: string | null;
-}
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface PlantCardProps {
   plant: Plant;
-  careInfo?: PlantCareInfo;
-  showEditIcon?: boolean;
-  sites?: Site[];
-  onPlantUpdate?: (plantData: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  additionalInfo?: string;
+  showSpecies?: boolean;
+  showCareSchedule?: boolean;
+  showCareInfo?: boolean;
 }
 
 const PlantCard: React.FC<PlantCardProps> = ({ 
   plant, 
-  careInfo = {}, 
-  showEditIcon = false,
-  sites = [],
-  onPlantUpdate,
-  additionalInfo 
+  showSpecies = false,
+  showCareSchedule = false,
+  showCareInfo = false,
 }) => {
-  const [showEditModal, setShowEditModal] = useState(false);
+  const navigation = useNavigation<NavigationProp>();
 
-  const handleEdit = () => {
-    setShowEditModal(true);
+  const handlePlantPress = () => {
+    navigation.navigate('PlantDetails', { plantId: plant.id });
   };
 
-  const handleSaveEdit = (plantData: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (onPlantUpdate) {
-      onPlantUpdate(plantData);
+  const getCareInfo = () => {
+    if (!showCareInfo) return null;
+    
+    const today = new Date();
+    const careItems = [];
+
+    // Check for water
+    if (plant.lastWatered) {
+      const lastWateredDate = new Date(plant.lastWatered);
+      const daysSinceWatered = getDaysDifference(today, lastWateredDate);
+      if (daysSinceWatered >= 0) {
+        careItems.push({
+          type: 'water',
+          days: daysSinceWatered,
+          needsCare: daysSinceWatered >= plant.wateringSchedule.frequency
+        });
+      }
+    } else {
+      careItems.push({
+        type: 'water',
+        days: 0,
+        needsCare: true
+      });
     }
-    setShowEditModal(false);
+
+    // Check for fertilizer
+    if (plant.fertilizingSchedule.isActive) {
+      if (plant.lastFertilized) {
+        const lastFertilizedDate = new Date(plant.lastFertilized);
+        const daysSinceFertilized = getDaysDifference(today, lastFertilizedDate);
+        if (daysSinceFertilized >= 0) {
+          careItems.push({
+            type: 'fertilizer',
+            days: daysSinceFertilized,
+            needsCare: daysSinceFertilized >= plant.fertilizingSchedule.frequency
+          });
+        }
+      } else {
+        careItems.push({
+          type: 'fertilizer',
+          days: 0,
+          needsCare: true
+        });
+      }
+    }
+
+    return careItems.filter(item => item.needsCare);
   };
+
+  const handleCareBlockPress = (careType: string, days: number) => {
+    console.log(`Care block pressed: ${careType}, days passed: ${days}`);
+  };
+
+  const careInfo = getCareInfo();
 
   return (
-    <View style={styles.plantCard}>
+    <TouchableOpacity style={styles.plantCard} onPress={handlePlantPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <View style={styles.plantInfo}>
-          <Text style={styles.plantName}>{plant.name}</Text>
-          <Text style={styles.plantSpecies}>{plant.species}</Text>
+          <Text style={styles.plantName} numberOfLines={1} ellipsizeMode="tail">
+            {plant.name}
+          </Text>
+          {showSpecies && (
+            <Text style={styles.plantSpecies}>
+              {plant.species || 'Unknown species'}
+            </Text>
+          )}
+          {showCareSchedule && (
+            <View style={styles.careScheduleContainer}>
+              <View style={styles.scheduleItem}>
+                <FontAwesome5 name="hand-holding-water" size={12} color="#2196F3" style={styles.scheduleIcon} />
+                <Text style={styles.scheduleText}>
+                  Water every {plant.wateringSchedule.frequency} days
+                </Text>
+              </View>
+              {plant.fertilizingSchedule.isActive && (
+                <View style={styles.scheduleItem}>
+                  <MaterialCommunityIcons name="format-color-fill" size={12} color="#FF8C00" style={styles.scheduleIcon} />
+                  <Text style={styles.scheduleText}>
+                    Fertilize every {plant.fertilizingSchedule.frequency} days
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
-        {showEditIcon && (
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <Text style={styles.editIcon}>✎</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      <View style={styles.careNeeds}>
-        {careInfo.needsWater && (
-          <View style={styles.careTag}>
-            <Text style={styles.careTagText}>Needs Water</Text>
+        {careInfo && careInfo.length > 0 && (
+          <View style={styles.careBlocksContainer}>
+            {careInfo.map((care, index) => (
+              <TouchableOpacity
+                key={`${care.type}-${index}`}
+                style={styles.careBlock}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleCareBlockPress(care.type, care.days);
+                }}
+              >
+                {care.type === 'water' ? (
+                  <FontAwesome5 name="hand-holding-water" size={30} color="#87CEEB" />
+                ) : (
+                  <MaterialCommunityIcons name="format-color-fill" size={30} color="#FFB366" />
+                )}
+                <Text style={styles.careBlockText}>-{care.days} {care.days > 1 ? 'days' : 'day'}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
-        {careInfo.needsFertilizer && (
-          <View style={styles.careTag}>
-            <Text style={styles.careTagText}>Needs Fertilizer</Text>
-          </View>
-        )}
-        {careInfo.statusText && !careInfo.needsWater && !careInfo.needsFertilizer && (
-          <Text style={styles.plantCareStatus}>{careInfo.statusText}</Text>
-        )}
-        {additionalInfo && (
-          <Text style={styles.additionalInfo}>{additionalInfo}</Text>
-        )}
       </View>
-
-      {showEditModal && (
-        <AddPlant
-          visible={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          onSave={handleSaveEdit}
-          sites={sites}
-          editingPlant={plant}
-        />
-      )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -115,49 +171,46 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   plantSpecies: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#666',
     marginTop: 5,
     fontStyle: 'italic',
   },
-  editButton: {
-    padding: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    minWidth: 24,
-    minHeight: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+  careScheduleContainer: {
+    marginTop: 8,
   },
-  editIcon: {
-    fontSize: 12,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  careNeeds: {
+  scheduleItem: {
     flexDirection: 'row',
-    marginTop: 10,
-    gap: 10,
+    alignItems: 'center',
+    marginVertical: 2,
   },
-  careTag: {
-    backgroundColor: '#fff3cd',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+  scheduleIcon: {
+    marginRight: 6,
   },
-  careTagText: {
-    color: '#856404',
+  scheduleText: {
     fontSize: 12,
-    fontWeight: '500',
-  },
-  plantCareStatus: {
-    fontSize: 14,
     color: '#666',
   },
-  additionalInfo: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 5,
+  careBlocksContainer: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  careBlock: {
+    width: 46,
+    height: 46,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  careBlockText: {
+    fontSize: 8,
+    color: '#FF0000',
+    fontWeight: '500',
+    marginTop: 1,
   },
 });
 

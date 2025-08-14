@@ -10,10 +10,9 @@ import PlantCard from './PlantCard';
 
 interface PlantsProps {
   sites: Site[];
-  onPlantUpdate?: (plantData: Omit<Plant, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
-const Plants: React.FC<PlantsProps> = ({ sites, onPlantUpdate }) => {
+const Plants: React.FC<PlantsProps> = ({ sites }) => {
   const getAllPlants = (): Plant[] => {
     return sites.flatMap(site => site.plants);
   };
@@ -32,24 +31,14 @@ const Plants: React.FC<PlantsProps> = ({ sites, onPlantUpdate }) => {
         </View>
       ) : (
         <View style={styles.plantsContainer}>
-          {plants.map(plant => {
-            const additionalInfo = `Water every ${plant.wateringSchedule.frequency} days${
-              plant.fertilizingSchedule.isActive 
-                ? ` • Fertilize every ${plant.fertilizingSchedule.frequency} days`
-                : ''
-            }`;
-            
-            return (
-              <PlantCard
-                key={plant.id}
-                plant={plant}
-                showEditIcon={true}
-                sites={sites}
-                onPlantUpdate={onPlantUpdate}
-                additionalInfo={additionalInfo}
-              />
-            );
-          })}
+          {plants.map(plant => (
+            <PlantCard
+              key={plant.id}
+              plant={plant}
+              showSpecies={true}
+              showCareSchedule={true}
+            />
+          ))}
         </View>
       )}
     </ScrollView>

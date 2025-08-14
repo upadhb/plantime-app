@@ -107,3 +107,4 @@ npx expo install react-native-safe-area-context
 
 ### Data Migration
 When changing data structures, update the `initializeDefaultData()` method in `storage.ts` to handle existing user data gracefully.
+- Always add and update unit tests after any code change
